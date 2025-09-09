@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nilabjya Pokémon Battle Arena</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <style>
+        :root {
+            --fire-main: #F08030; --water-main: #6890F0; --grass-main: #78C850; --thunder-main: #F8D030;
+            --transition-speed: 0.5s;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            text-align: center;
+            padding: 20px;
+            margin: 0;
+            transition: color var(--transition-speed) ease;
+            overflow-x: hidden;
+            background: #000; /* Start with a base */
+        }
+
+        /* --- THEME STYLES --- */
+        body.light-theme { color: #2c3e50; --ui-bg: rgba(255, 255, 255, 0.4); --ui-border: rgba(255, 255, 255, 0.8); --text-shadow: none; }
+        body.dark-theme { color: #ecf0f1; --ui-bg: rgba(0, 0, 20, 0.4); --ui-border: rgba(255, 255, 255, 0.2); --text-shadow: 0 2px 4px rgba(0,0,0,0.5); }
+        body.neon-theme, body.particles-theme { color: #ecf0f1; --ui-bg: rgba(10, 10, 10, 0.4); --ui-border: rgba(255, 255, 255, 0.1); --text-shadow: 0 0 5px #fff, 0 0 10px #0ff; }
+
+        #animation-canvas { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -1; display: none; }
+        body.neon-theme #animation-canvas, body.particles-theme #animation-canvas { display: block; }
+
+        /* --- UI ELEMENTS --- */
+        .header-title, .fight-arena, .theme-selector {
+            background: var(--ui-bg); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+            border-radius: 20px; border: 1px solid var(--ui-border); box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+            transition: background var(--transition-speed), border var(--transition-speed);
+        }
+        .header-title { padding: 15px 30px; display: inline-block; margin-bottom: 30px; }
+        h1, h2 { text-shadow: var(--text-shadow); transition: text-shadow var(--transition-speed); }
+        h1 { font-family: 'Bangers', cursive; font-size: 3.5em; letter-spacing: 2px; } 
+        h2 { font-size: 1.8em; margin-top: 40px; }
+        .neon-theme .header-title, .particles-theme .header-title { text-shadow: 0 0 5px #fff, 0 0 10px #f0f, 0 0 15px #f0f; }
+        .neon-theme .fight-arena h2, .particles-theme .fight-arena h2 { text-shadow: 0 0 5px #fff, 0 0 10px #0ff, 0 0 15px #0ff; }
+        .showcase { display: flex; justify-content: center; gap: 30px; margin-bottom: 50px; flex-wrap: wrap; }
+        
+        /* --- CARDS --- */
+        .pokemon-card { width: 280px; height: 390px; padding: 15px; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.2); cursor: pointer; transition: transform 0.3s ease, box-shadow 0.3s ease; border: 1px solid rgba(255,255,255,0.3); display: flex; flex-direction: column; position: relative; overflow: hidden; color: white; }
+        .pokemon-card:hover { transform: translateY(-10px) scale(1.05); box-shadow: 0 10px 25px rgba(0,0,0,0.4); }
+        .fire-type { background: linear-gradient(135deg, var(--fire-main), #a54f15); } 
+        .water-type { background: linear-gradient(135deg, var(--water-main), #3b5ca5); } 
+        .grass-type { background: linear-gradient(135deg, var(--grass-main), #4a8d2c); }
+        .thunder-type { background: linear-gradient(135deg, var(--thunder-main), #a1871f); }
+        .card-header { display: flex; justify-content: space-between; align-items: center; font-weight: 700; } .card-header .name { font-size: 1.2em; } .card-header .hp { font-size: 1.1em; } .card-image { width: 100%; height: 150px; background-color: #fff; margin: 10px 0; border-radius: 10px; border: 4px solid #333; overflow: hidden; } .card-image img { width: 100%; height: 100%; object-fit: cover; } .card-body { text-align: left; font-size: 0.8em; flex-grow: 1; z-index: 2; position: relative;} .ability { background-color: rgba(0,0,0,0.2); padding: 5px; border-radius: 5px; margin-bottom: 8px; } .ability-name { font-weight: 600; } .attack { display: flex; justify-content: space-between; margin-bottom: 5px; } .attack-name { font-weight: 600; } .attack-cost { margin-right: 10px; } .card-footer { display: flex; justify-content: space-around; font-size: 0.75em; font-weight: 600; margin-top: auto; background-color: rgba(0,0,0,0.3); padding: 5px; border-radius: 5px; z-index: 2; position: relative;}
+        .pokemon-card::before, .pokemon-card::after { content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; z-index: 1; pointer-events: none; }
+        @keyframes embers { 0% { transform: translateY(0) scale(1); opacity: 0.7; } 100% { transform: translateY(-150px) scale(0.5); opacity: 0; } } .fire-type:hover::before { box-shadow: -70px 20px 5px 0px #ffac4a, 80px 50px 7px 1px #ffac4a, -20px 80px 4px 0px #ffac4a, 50px 120px 6px 0px #ffac4a, -50px 180px 8px -1px #ffac4a; animation: embers 3s linear infinite; } @keyframes bubbles { 0% { transform: translateY(0); opacity: 0; } 10%, 90% { opacity: 0.8; } 100% { transform: translateY(-200px); opacity: 0; } } .water-type:hover::before { background: radial-gradient(circle, rgba(255,255,255,0.5) 20%, transparent 50%) 0 0 / 15px 15px, radial-gradient(circle, rgba(255,255,255,0.4) 20%, transparent 50%) 20px 30px / 10px 10px, radial-gradient(circle, rgba(255,255,255,0.6) 20%, transparent 50%) -30px 60px / 20px 20px, radial-gradient(circle, rgba(255,255,255,0.3) 20%, transparent 50%) 40px 90px / 12px 12px; animation: bubbles 4s linear infinite; } @keyframes leaves { 0% { transform: translateY(-100%) translateX(-20px) rotate(0deg); opacity: 0; } 20%, 80% { opacity: 1; } 100% { transform: translateY(150%) translateX(20px) rotate(720deg); opacity: 0; } } .grass-type:hover::before { content: '🍃'; font-size: 20px; text-shadow: 0 0 5px green; animation: leaves 3s linear infinite; animation-delay: 0s; } .grass-type:hover::after { content: '🌿'; font-size: 25px; text-shadow: 0 0 5px green; animation: leaves 3.5s linear infinite; animation-delay: 1.5s; } @keyframes sparks { 0%, 100% { box-shadow: 0 0 5px #fff, 0 0 10px #fff, 0 0 15px var(--thunder-main); opacity: 0; } 50% { box-shadow: 0 0 10px #fff, 0 0 20px #fff, 0 0 30px var(--thunder-main); opacity: 1; } } .thunder-type:hover { animation: sparks 0.4s linear infinite; }
+        
+        /* --- ARENA & BATTLE --- */
+        .fight-arena { padding: 30px; display: inline-block; } .slots { display: flex; justify-content: center; gap: 40px; margin-bottom: 30px; } 
+        .slot { width: 314px; height: 424px; border-radius: 20px; display: flex; align-items: center; justify-content: center; background-color: rgba(0,0,0,0.2); transition: background-color 0.3s; border: 4px dashed var(--ui-border); }
+        .slot-placeholder { font-family: 'Bangers', cursive; font-size: 2.5em; color: white; opacity: 0.5; padding: 20px; line-height: 1.2; text-shadow: 2px 2px 4px #000; }
+        .slot .pokemon-card { cursor: default; } .slot .pokemon-card:hover { transform: none; box-shadow: 0 5px 15px rgba(0,0,0,0.4); animation: none; } .slot .pokemon-card:hover::before, .slot .pokemon-card:hover::after { content: none; }
+        #fight-button { background-color: var(--fire-main); color: white; padding: 15px 40px; border: none; border-radius: 10px; cursor: pointer; font-size: 1.5em; font-weight: 700; transition: all 0.3s; text-shadow: 0 0 5px black; } #fight-button:hover:not(:disabled) { background-color: #c0392b; transform: scale(1.1); } #fight-button:disabled { background-color: #555; cursor: not-allowed; }
+        #winner-display { margin-top: 15px; font-size: 2em; font-weight: bold; color: var(--thunder-main); height: 40px; text-shadow: 0 0 10px #000; }
+        #win-reason-display { font-size: 1.2em; font-style: italic; opacity: 0.8; height: 25px; }
+        .winner-glow { animation: winner-pulse 1s infinite alternate; } .loser-fade { opacity: 0.4; filter: grayscale(100%); }
+        @keyframes winner-pulse { from { box-shadow: 0 0 15px 5px #fff, 0 0 25px 10px var(--thunder-main); } to { box-shadow: 0 0 25px 10px #fff, 0 0 40px 15px var(--thunder-main); } }
+        #fight-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.85); z-index: 9999; display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.5s ease; }
+        #fight-overlay.active { opacity: 1; }
+        #fight-text { font-family: 'Bangers', cursive; font-size: clamp(80px, 20vw, 300px); background: linear-gradient(to bottom, #ffeb3b, #f44336); background-clip: text; -webkit-background-clip: text; color: transparent; -webkit-text-stroke: 3px black; transform: scale(0.5); opacity: 0; animation: fight-animation 2.5s ease-out forwards; }
+        #fight-overlay:not(.active) #fight-text { animation: none; }
+        @keyframes fight-animation { 0% { transform: scale(0.5); opacity: 0; } 50% { transform: scale(1.1); opacity: 1; } 70% { transform: scale(1); } 100% { transform: scale(1); opacity: 0; } }
+
+        /* --- Theme Selector --- */
+        .theme-selector { position: absolute; top: 20px; right: 20px; padding: 5px; display: flex; flex-wrap: wrap; gap: 5px; border-radius: 12px; z-index: 100; max-width: 250px; justify-content: flex-end; }
+        .theme-selector button { padding: 8px 15px; font-family: 'Poppins', sans-serif; font-weight: 600; border: none; border-radius: 8px; cursor: pointer; background-color: transparent; color: inherit; transition: background-color 0.3s, color 0.3s; }
+        .theme-selector button.active { background-color: rgba(255, 255, 255, 0.5); color: #000; }
+        .neon-theme .theme-selector button.active, .particles-theme .theme-selector button.active { background-color: #0ff; color: #000; text-shadow: 0 0 5px #0ff; }
+    </style>
+</head>
+<body>
+
+    <canvas id="animation-canvas"></canvas>
+    <div id="fight-overlay"><span id="fight-text">LET'S FIGHT</span></div>
+
+    <div class="theme-selector">
+        <button id="theme-light">Light</button>
+        <button id="theme-dark">Dark</button>
+        <button id="theme-neon">Neon</button>
+        <button id="theme-particles">Particles</button>
+    </div>
+
+    <div class="header-title"> <h1>Nilabjya's Battle Arena</h1> </div>
+    <h2>Choose Your Fighters!</h2>
+    <div class="showcase"> <div class="pokemon-card fire-type" data-name="Nilabjyaleon"></div> <div class="pokemon-card water-type" data-name="Nilabjyel"></div> <div class="pokemon-card grass-type" data-name="Nilabkorita"></div> <div class="pokemon-card thunder-type" data-name="Nilabchu"></div> </div>
+    <div class="fight-arena"> <h2>Fight Arena</h2> <div class="slots"> 
+        <div class="slot" id="slot1"><div class="slot-placeholder">Click a card to choose your fighter</div></div> 
+        <div class="slot" id="slot2"><div class="slot-placeholder">Click a card to choose your fighter</div></div> 
+    </div> <button id="fight-button">Battle!</button> 
+    <div id="winner-display"></div>
+    <div id="win-reason-display"></div>
+    </div>
+
+    <script>
+        const cardData = { "Nilabjyaleon": { type: "fire-type", hp: "120 HP 🔥", image: "https://github.com/bibhavdas/Images-Nilabjya-Pokemon-cards/raw/main/fire.png", ability: "Friendly Flame: Attach a 🔥 Energy from your discard pile to a Benched Pokémon.", attacks: [{cost: "🔥🔥", name: "Loyal Flare", damage: "50+"}, {cost: "🔥🔥🔥", name: "Blazing Banter", damage: "120"}], weakness: "💧x2", resistance: "", retreat: "⭐⭐" }, "Nilabjyel": { type: "water-type", hp: "130 HP 💧", image: "https://github.com/bibhavdas/Images-Nilabjya-Pokemon-cards/raw/main/water.png", ability: "Calming Presence: Prevent Supporter effects done to Pokémon in play.", attacks: [{cost: "💧", name: "Aqua Jet", damage: "30"}, {cost: "💧💧💧", name: "Deep Sea Story", damage: "100"}], weakness: "⚡x2", resistance: "", retreat: "⭐⭐" }, "Nilabkorita": { type: "grass-type", hp: "110 HP 🍃", image: "https://github.com/bibhavdas/Images-Nilabjya-Pokemon-cards/raw/main/veg.png", ability: "Natural Wisdom: When evolved, search your deck for 2 basic Energy cards.", attacks: [{cost: "🍃", name: "Soothing Scent", damage: "30"}, {cost: "🍃🍃", name: "Evergreen Slam", damage: "80"}], weakness: "🔥x2", resistance: "💧-30", retreat: "⭐" }, "Nilabchu": { type: "thunder-type", hp: "90 HP ⚡", image: "https://github.com/bibhavdas/Images-Nilabjya-Pokemon-cards/raw/main/thun.png", ability: "Static Spark: If damaged, the Attacking Pokémon is now Paralyzed.", attacks: [{cost: "⚡", name: "Quick Wit", damage: "20"}, {cost: "⚡⚡", name: "Thunderous Joke", damage: "60"}], weakness: "👊x2", resistance: "⚙️-30", retreat: "⭐" } };
+        document.querySelectorAll('.showcase .pokemon-card').forEach(c => { const n = c.dataset.name; const d = cardData[n]; c.innerHTML = `<div class="card-header"><span class="name">${n}</span><span class="hp">${d.hp}</span></div><div class="card-image"><img src="${d.image}" alt="${n}"></div><div class="card-body"><div class="ability"><span class="ability-name">${d.ability.split(':')[0]}:</span>${d.ability.split(':')[1]}</div>${d.attacks.map(a => `<div class="attack"><span class="attack-cost">${a.cost}</span><span class="attack-name">${a.name}</span><span>${a.damage}</span></div>`).join('')}</div><div class="card-footer"><span>Weakness: ${d.weakness}</span><span>Resistance: ${d.resistance}</span><span>Retreat: ${d.retreat}</span></div>`; });
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const body = document.body;
+            let currentTheme = 'dark';
+
+            // --- MASTER ANIMATION ENGINE ---
+            const canvas = document.getElementById('animation-canvas');
+            let animationController = { stop: () => {} };
+
+            const themePalettes = {
+                light: ['#a8e0ff', '#fbc2eb', '#8fd3f4', '#84fab0'],
+                dark: ['#434371', '#2C5364', '#0f2027', '#480048']
+            };
+
+            function startGradientAnimation() {
+                let animationFrameId;
+                let gradientTime = 0; const gradientSpeed = 0.00005;
+                function updateBackground() {
+                    gradientTime += gradientSpeed;
+                    const palette = themePalettes[currentTheme];
+                    const t = gradientTime * palette.length;
+                    const c1_idx = Math.floor(t) % palette.length;
+                    const c2_idx = (c1_idx + 1) % palette.length;
+                    const color1 = palette[c1_idx]; const color2 = palette[c2_idx];
+                    body.style.background = `linear-gradient(-45deg, ${color1}, ${color2})`;
+                    animationFrameId = requestAnimationFrame(updateBackground);
+                }
+                updateBackground();
+                return { stop: () => cancelAnimationFrame(animationFrameId) };
+            }
+
+            function startNeonAnimation() {
+                const ctx = canvas.getContext('2d');
+                let animationFrameId, laserTimeoutId;
+                let particles = []; let lasers = [];
+                const neonColors = ['#00f5ff', '#ff00ff', '#00ff7f', '#ffff00'];
+                function setCanvasSize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+                function animateParticle(p) { anime({ targets: p, x: anime.random(0, canvas.width), y: anime.random(0, canvas.height), easing: 'linear', duration: anime.random(4000, 8000), complete: () => animateParticle(p) }); }
+                function triggerLaser() { const v = Math.random() > 0.5; const l = { x1: v ? anime.random(0, canvas.width) : (Math.random() > 0.5 ? 0 : canvas.width), y1: v ? (Math.random() > 0.5 ? 0 : canvas.height) : anime.random(0, canvas.height), color: neonColors[anime.random(0, neonColors.length-1)], progress: 0, alpha: 1 }; l.x2 = v ? l.x1 : (l.x1 === 0 ? canvas.width : 0); l.y2 = v ? (l.y1 === 0 ? canvas.height : 0) : l.y1; lasers.push(l); anime.timeline({ targets: l, complete: () => lasers.shift() }).add({ progress: 1, duration: 200 }).add({ alpha: 0, duration: 250 }, '-=100'); laserTimeoutId = setTimeout(triggerLaser, anime.random(3000, 8000)); }
+                function render() { ctx.clearRect(0, 0, canvas.width, canvas.height); particles.forEach(p => { ctx.beginPath(); ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2); ctx.fillStyle = p.color; ctx.shadowBlur = 10; ctx.shadowColor = p.color; ctx.fill(); }); lasers.forEach(l => { const x = l.x1 + (l.x2 - l.x1) * l.progress, y = l.y1 + (l.y2 - l.y1) * l.progress; ctx.globalAlpha = l.alpha; ctx.beginPath(); ctx.moveTo(l.x1, l.y1); ctx.lineTo(x, y); ctx.strokeStyle = l.color; ctx.lineWidth = 2; ctx.shadowBlur = 20; ctx.shadowColor = l.color; ctx.stroke(); ctx.globalAlpha = 1; }); animationFrameId = requestAnimationFrame(render); }
+                setCanvasSize(); window.addEventListener('resize', setCanvasSize);
+                particles = Array.from({ length: 50 }, () => ({ x: anime.random(0, canvas.width), y: anime.random(0, canvas.height), radius: anime.random(1, 2.5), color: neonColors[anime.random(0, neonColors.length-1)] }));
+                particles.forEach(animateParticle); triggerLaser(); render();
+                return { stop: () => { cancelAnimationFrame(animationFrameId); clearTimeout(laserTimeoutId); window.removeEventListener('resize', setCanvasSize); anime.remove(particles); anime.remove(lasers); } };
+            }
+
+            function startParticlesAnimation() {
+                const scene = new THREE.Scene();
+                const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+                const renderer = new THREE.WebGLRenderer({ canvas: canvas, alpha: true });
+                let animationFrameId;
+                let randomness = [];
+
+                function setCanvasSize() { renderer.setSize(window.innerWidth, window.innerHeight); camera.aspect = window.innerWidth / window.innerHeight; camera.updateProjectionMatrix(); }
+                
+                const PARTICLE_COUNT = 10000;
+                const geometry = new THREE.BufferGeometry();
+                const positions = new Float32Array(PARTICLE_COUNT * 3);
+                const colors = new Float32Array(PARTICLE_COUNT * 3);
+                const gatheredPositions = new Float32Array(PARTICLE_COUNT * 3);
+                const scatteredPositions = new Float32Array(PARTICLE_COUNT * 3);
+                const particleColors = [new THREE.Color('#00f5ff'), new THREE.Color('#ff00ff'), new THREE.Color('#00ff7f'), new THREE.Color('#ffff00')];
+
+                for (let i = 0; i < PARTICLE_COUNT; i++) {
+                    const i3 = i * 3;
+                    const phi = Math.acos(-1 + (2 * i) / PARTICLE_COUNT); const theta = Math.sqrt(PARTICLE_COUNT * Math.PI) * phi;
+                    gatheredPositions[i3] = 2 * Math.cos(theta) * Math.sin(phi); gatheredPositions[i3+1] = 2 * Math.sin(theta) * Math.sin(phi); gatheredPositions[i3+2] = 2 * Math.cos(phi);
+                    scatteredPositions[i3] = (Math.random() - 0.5) * 10; scatteredPositions[i3+1] = (Math.random() - 0.5) * 10; scatteredPositions[i3+2] = (Math.random() - 0.5) * 10;
+                    const color = particleColors[anime.random(0, particleColors.length - 1)];
+                    colors[i3] = color.r; colors[i3+1] = color.g; colors[i3+2] = color.b;
+                    randomness.push({ x: Math.random(), y: Math.random(), z: Math.random() });
+                }
+                
+                geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+                geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+                const material = new THREE.PointsMaterial({ size: 0.05, vertexColors: true, transparent: true, opacity: 0.8 });
+                const points = new THREE.Points(geometry, material);
+                scene.add(points); camera.position.z = 5;
+                const animationState = { progress: 0 };
+                function toggleState() { anime({ targets: animationState, progress: animationState.progress > 0.5 ? 0 : 1, duration: 4000, easing: 'easeInOutSine', complete: () => setTimeout(toggleState, 1000) }); }
+
+                function render() {
+                    const time = Date.now() * 0.0005;
+                    for (let i = 0; i < PARTICLE_COUNT; i++) {
+                        const i3 = i * 3;
+                        const r = randomness[i];
+                        const mainX = gatheredPositions[i3]   + (scatteredPositions[i3]   - gatheredPositions[i3])   * animationState.progress;
+                        const mainY = gatheredPositions[i3+1] + (scatteredPositions[i3+1] - gatheredPositions[i3+1]) * animationState.progress;
+                        const mainZ = gatheredPositions[i3+2] + (scatteredPositions[i3+2] - gatheredPositions[i3+2]) * animationState.progress;
+                        positions[i3]   = mainX + Math.cos(time + r.x * Math.PI) * 0.1;
+                        positions[i3+1] = mainY + Math.sin(time + r.y * Math.PI) * 0.1;
+                        positions[i3+2] = mainZ + Math.cos(time + r.z * Math.PI) * 0.1;
+                    }
+                    geometry.attributes.position.needsUpdate = true;
+                    points.rotation.y += 0.001 * (1 - animationState.progress); points.rotation.x += 0.0005 * (1 - animationState.progress);
+                    renderer.render(scene, camera);
+                    animationFrameId = requestAnimationFrame(render);
+                }
+                setCanvasSize(); window.addEventListener('resize', setCanvasSize);
+                toggleState(); render();
+                return { stop: () => { cancelAnimationFrame(animationFrameId); window.removeEventListener('resize', setCanvasSize); anime.remove(animationState); } };
+            }
+
+            // --- THEME CONTROLLER ---
+            const themeButtons = document.querySelectorAll('.theme-selector button');
+            const setTheme = (themeName) => {
+                animationController.stop(); // <-- ALWAYS STOP THE CURRENT CONTROLLER
+                
+                currentTheme = themeName;
+                body.className = `${themeName}-theme`;
+                localStorage.setItem('theme', themeName);
+                themeButtons.forEach(btn => btn.classList.toggle('active', btn.id === `theme-${themeName}`));
+                
+                if (themeName === 'neon') {
+                    body.style.background = '#000';
+                    animationController = startNeonAnimation();
+                } else if (themeName === 'particles') {
+                    body.style.background = '#000';
+                    animationController = startParticlesAnimation();
+                } else { // light or dark
+                    body.style.background = '';
+                    animationController = startGradientAnimation();
+                }
+            };
+            
+            const savedTheme = localStorage.getItem('theme') || 'dark';
+            setTheme(savedTheme);
+            
+            // ### FIX STARTS HERE ###
+            // This code adds the missing click functionality to the theme buttons.
+            themeButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    // Get theme name from the button's ID (e.g., "theme-light" -> "light")
+                    const theme = button.id.replace('theme-', '');
+                    setTheme(theme);
+                });
+            });
+            // ### FIX ENDS HERE ###
+
+            // --- BATTLE LOGIC ---
+            const cards = document.querySelectorAll('.showcase .pokemon-card'); const slot1 = document.getElementById('slot1'); const slot2 = document.getElementById('slot2'); const fightButton = document.getElementById('fight-button'); const winnerDisplay = document.getElementById('winner-display'); const winReasonDisplay = document.getElementById('win-reason-display'); const fightOverlay = document.getElementById('fight-overlay'); const slotPlaceholderHTML = `<div class="slot-placeholder">Click a card to choose your fighter</div>`; const winReasons = [ "with a surprising burst of energy!", "due to a clever last-minute strategy.", "thanks to sheer determination!", "by exploiting a critical weakness.", "landing a perfect critical hit!", "with an unbelievable comeback!", "by simply overpowering the opponent." ];
+            let fighter1 = null; let fighter2 = null;
+            cards.forEach(card => { card.addEventListener('click', () => { if ((fighter1 && fighter1.dataset.name === card.dataset.name) || (fighter2 && fighter2.dataset.name === card.dataset.name)) return; const newCardHTML = card.outerHTML; if (!fighter1) { fighter1 = card; slot1.innerHTML = newCardHTML; } else if (!fighter2) { fighter2 = card; slot2.innerHTML = newCardHTML; } }); });
+            fightButton.addEventListener('click', () => {
+                if (fighter1 && fighter2) {
+                    fightButton.disabled = true; fightOverlay.classList.add('active');
+                    setTimeout(() => {
+                        const hp1 = parseInt(cardData[fighter1.dataset.name].hp); const hp2 = parseInt(cardData[fighter2.dataset.name].hp);
+                        const winnerCard = Math.random() < (hp1 / (hp1 + hp2)) ? fighter1 : fighter2;
+                        const winnerName = winnerCard.dataset.name;
+                        winnerDisplay.textContent = `${winnerName} is the winner!`;
+                        winReasonDisplay.textContent = winReasons[anime.random(0, winReasons.length - 1)];
+                        fightOverlay.classList.remove('active');
+                        const s1Card = slot1.querySelector('.pokemon-card'); const s2Card = slot2.querySelector('.pokemon-card');
+                        if (s1Card.dataset.name === winnerName) { s1Card.classList.add('winner-glow'); s2Card.classList.add('loser-fade'); } else { s2Card.classList.add('winner-glow'); s1Card.classList.add('loser-fade'); }
+                        setTimeout(() => { fighter1 = null; fighter2 = null; slot1.innerHTML = slotPlaceholderHTML; slot2.innerHTML = slotPlaceholderHTML; winnerDisplay.textContent = ''; winReasonDisplay.textContent = ''; fightButton.disabled = false; }, 4000);
+                    }, 2500); 
+                } else { alert('Please select two cards to battle!'); }
+            });
+        });
+    </script>
+</body>
+</html>
