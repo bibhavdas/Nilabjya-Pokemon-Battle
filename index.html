@@ -22,10 +22,9 @@
             margin: 0;
             transition: color var(--transition-speed) ease;
             overflow-x: hidden;
-            background: #000; /* Start with a base */
+            background: #000; 
         }
 
-        /* --- THEME STYLES --- */
         body.light-theme { color: #2c3e50; --ui-bg: rgba(255, 255, 255, 0.4); --ui-border: rgba(255, 255, 255, 0.8); --text-shadow: none; }
         body.dark-theme { color: #ecf0f1; --ui-bg: rgba(0, 0, 20, 0.4); --ui-border: rgba(255, 255, 255, 0.2); --text-shadow: 0 2px 4px rgba(0,0,0,0.5); }
         body.neon-theme, body.particles-theme { color: #ecf0f1; --ui-bg: rgba(10, 10, 10, 0.4); --ui-border: rgba(255, 255, 255, 0.1); --text-shadow: 0 0 5px #fff, 0 0 10px #0ff; }
@@ -33,7 +32,6 @@
         #animation-canvas { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -1; display: none; }
         body.neon-theme #animation-canvas, body.particles-theme #animation-canvas { display: block; }
 
-        /* --- UI ELEMENTS --- */
         .header-title, .fight-arena, .theme-selector {
             background: var(--ui-bg); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
             border-radius: 20px; border: 1px solid var(--ui-border); box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
@@ -47,7 +45,6 @@
         .neon-theme .fight-arena h2, .particles-theme .fight-arena h2 { text-shadow: 0 0 5px #fff, 0 0 10px #0ff, 0 0 15px #0ff; }
         .showcase { display: flex; justify-content: center; gap: 30px; margin-bottom: 50px; flex-wrap: wrap; }
         
-        /* --- CARDS --- */
         .pokemon-card { width: 280px; height: 390px; padding: 15px; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.2); cursor: pointer; transition: transform 0.3s ease, box-shadow 0.3s ease; border: 1px solid rgba(255,255,255,0.3); display: flex; flex-direction: column; position: relative; overflow: hidden; color: white; }
         .pokemon-card:hover { transform: translateY(-10px) scale(1.05); box-shadow: 0 10px 25px rgba(0,0,0,0.4); }
         .fire-type { background: linear-gradient(135deg, var(--fire-main), #a54f15); } 
@@ -58,7 +55,6 @@
         .pokemon-card::before, .pokemon-card::after { content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; z-index: 1; pointer-events: none; }
         @keyframes embers { 0% { transform: translateY(0) scale(1); opacity: 0.7; } 100% { transform: translateY(-150px) scale(0.5); opacity: 0; } } .fire-type:hover::before { box-shadow: -70px 20px 5px 0px #ffac4a, 80px 50px 7px 1px #ffac4a, -20px 80px 4px 0px #ffac4a, 50px 120px 6px 0px #ffac4a, -50px 180px 8px -1px #ffac4a; animation: embers 3s linear infinite; } @keyframes bubbles { 0% { transform: translateY(0); opacity: 0; } 10%, 90% { opacity: 0.8; } 100% { transform: translateY(-200px); opacity: 0; } } .water-type:hover::before { background: radial-gradient(circle, rgba(255,255,255,0.5) 20%, transparent 50%) 0 0 / 15px 15px, radial-gradient(circle, rgba(255,255,255,0.4) 20%, transparent 50%) 20px 30px / 10px 10px, radial-gradient(circle, rgba(255,255,255,0.6) 20%, transparent 50%) -30px 60px / 20px 20px, radial-gradient(circle, rgba(255,255,255,0.3) 20%, transparent 50%) 40px 90px / 12px 12px; animation: bubbles 4s linear infinite; } @keyframes leaves { 0% { transform: translateY(-100%) translateX(-20px) rotate(0deg); opacity: 0; } 20%, 80% { opacity: 1; } 100% { transform: translateY(150%) translateX(20px) rotate(720deg); opacity: 0; } } .grass-type:hover::before { content: '🍃'; font-size: 20px; text-shadow: 0 0 5px green; animation: leaves 3s linear infinite; animation-delay: 0s; } .grass-type:hover::after { content: '🌿'; font-size: 25px; text-shadow: 0 0 5px green; animation: leaves 3.5s linear infinite; animation-delay: 1.5s; } @keyframes sparks { 0%, 100% { box-shadow: 0 0 5px #fff, 0 0 10px #fff, 0 0 15px var(--thunder-main); opacity: 0; } 50% { box-shadow: 0 0 10px #fff, 0 0 20px #fff, 0 0 30px var(--thunder-main); opacity: 1; } } .thunder-type:hover { animation: sparks 0.4s linear infinite; }
         
-        /* --- ARENA & BATTLE --- */
         .fight-arena { padding: 30px; display: inline-block; } .slots { display: flex; justify-content: center; gap: 40px; margin-bottom: 30px; } 
         .slot { width: 314px; height: 424px; border-radius: 20px; display: flex; align-items: center; justify-content: center; background-color: rgba(0,0,0,0.2); transition: background-color 0.3s; border: 4px dashed var(--ui-border); }
         .slot-placeholder { font-family: 'Bangers', cursive; font-size: 2.5em; color: white; opacity: 0.5; padding: 20px; line-height: 1.2; text-shadow: 2px 2px 4px #000; }
@@ -74,7 +70,6 @@
         #fight-overlay:not(.active) #fight-text { animation: none; }
         @keyframes fight-animation { 0% { transform: scale(0.5); opacity: 0; } 50% { transform: scale(1.1); opacity: 1; } 70% { transform: scale(1); } 100% { transform: scale(1); opacity: 0; } }
 
-        /* --- Theme Selector --- */
         .theme-selector { position: absolute; top: 20px; right: 20px; padding: 5px; display: flex; flex-wrap: wrap; gap: 5px; border-radius: 12px; z-index: 100; max-width: 250px; justify-content: flex-end; }
         .theme-selector button { padding: 8px 15px; font-family: 'Poppins', sans-serif; font-weight: 600; border: none; border-radius: 8px; cursor: pointer; background-color: transparent; color: inherit; transition: background-color 0.3s, color 0.3s; }
         .theme-selector button.active { background-color: rgba(255, 255, 255, 0.5); color: #000; }
@@ -210,10 +205,9 @@
                 return { stop: () => { cancelAnimationFrame(animationFrameId); window.removeEventListener('resize', setCanvasSize); anime.remove(animationState); } };
             }
 
-            // --- THEME CONTROLLER ---
             const themeButtons = document.querySelectorAll('.theme-selector button');
             const setTheme = (themeName) => {
-                animationController.stop(); // <-- ALWAYS STOP THE CURRENT CONTROLLER
+                animationController.stop(); 
                 
                 currentTheme = themeName;
                 body.className = `${themeName}-theme`;
@@ -235,18 +229,15 @@
             const savedTheme = localStorage.getItem('theme') || 'dark';
             setTheme(savedTheme);
             
-            // ### FIX STARTS HERE ###
-            // This code adds the missing click functionality to the theme buttons.
+
             themeButtons.forEach(button => {
                 button.addEventListener('click', () => {
-                    // Get theme name from the button's ID (e.g., "theme-light" -> "light")
                     const theme = button.id.replace('theme-', '');
                     setTheme(theme);
                 });
             });
-            // ### FIX ENDS HERE ###
 
-            // --- BATTLE LOGIC ---
+            
             const cards = document.querySelectorAll('.showcase .pokemon-card'); const slot1 = document.getElementById('slot1'); const slot2 = document.getElementById('slot2'); const fightButton = document.getElementById('fight-button'); const winnerDisplay = document.getElementById('winner-display'); const winReasonDisplay = document.getElementById('win-reason-display'); const fightOverlay = document.getElementById('fight-overlay'); const slotPlaceholderHTML = `<div class="slot-placeholder">Click a card to choose your fighter</div>`; const winReasons = [ "with a surprising burst of energy!", "due to a clever last-minute strategy.", "thanks to sheer determination!", "by exploiting a critical weakness.", "landing a perfect critical hit!", "with an unbelievable comeback!", "by simply overpowering the opponent." ];
             let fighter1 = null; let fighter2 = null;
             cards.forEach(card => { card.addEventListener('click', () => { if ((fighter1 && fighter1.dataset.name === card.dataset.name) || (fighter2 && fighter2.dataset.name === card.dataset.name)) return; const newCardHTML = card.outerHTML; if (!fighter1) { fighter1 = card; slot1.innerHTML = newCardHTML; } else if (!fighter2) { fighter2 = card; slot2.innerHTML = newCardHTML; } }); });
